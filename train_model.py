@@ -23,13 +23,21 @@ for category in CATEGORIES:
     
     for img_name in os.listdir(path):
         try:
-            # Read the image in Grayscale (color doesn't matter for shapes)
-            img_array = cv2.imread(os.path.join(path, img_name), cv2.IMREAD_GRAYSCALE)
+            # 1. Read in FULL COLOR
+            img_array = cv2.imread(os.path.join(path, img_name))
             
-            # Resize to 64x64
-            resized_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
+            # 2. Convert from BGR (OpenCV's default) to HSV (Hue, Saturation, Value)
+            hsv = cv2.cvtColor(img_array, cv2.COLOR_BGR2HSV)
             
-            # Flatten the 2D grid into a 1D array of numbers
+            # 3. Define the universal color range for human skin in HSV
+            lower_skin = np.array([0, 20, 70], dtype=np.uint8)
+            upper_skin = np.array([20, 255, 255], dtype=np.uint8)
+            
+            # 4. Create the Mask: Skin becomes pure white, everything else becomes pure black
+            mask = cv2.inRange(hsv, lower_skin, upper_skin)
+            
+            # 5. Resize and Flatten
+            resized_array = cv2.resize(mask, (IMG_SIZE, IMG_SIZE))
             flattened_array = resized_array.flatten()
             
             data.append(flattened_array)
